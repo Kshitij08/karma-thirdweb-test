@@ -3,35 +3,339 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity Web Player | Karma Climber</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Karma Climber</title>
+    <meta name="description" content="Endless arcade game featuring Pumpii! Earn $KARMA and $STT.">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Karma Climber">
+    <meta property="og:description" content="Endless arcade game featuring Pumpii! Earn $KARMA and $STT.">
+    <meta property="og:image" content="karma-climber-cover.webp">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Karma Climber">
+    <meta name="twitter:description" content="Endless arcade game featuring Pumpii! Earn $KARMA and $STT.">
+    <meta name="twitter:image" content="karma-climber-cover.webp">
+    
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="stylesheet" href="TemplateData/style.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,400;0,600;1,800&display=swap" rel="stylesheet">
+
+    <style>
+      /* --- GLOBAL STYLES --- */
+      :root {
+        /* Palette extracted from Game Screenshots */
+        --sky-top: #5C94FC;      /* Classic Arcade Sky Blue */
+        --sky-bottom: #95C6F8;   /* Lighter Blue */
+        --pumpii-pink: #FF69B4;  /* Character Color */
+        --coin-gold: #FFD700;    /* Coin/Logo Color */
+        --ground-green: #6DAA2C;
+        --bezel-color: #2b2b2b;
+        --text-shadow: 2px 2px 0px #000000;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        padding: 0;
+        /* Sky Gradient Background */
+        background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 100%);
+        font-family: 'Kanit', sans-serif; /* Readable font for footer/body */
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+      }
+
+      /* --- LOGO & TYPOGRAPHY --- */
+      .game-logo {
+        max-width: 150px;
+        width: 85%; /* Responsive width for smaller screens */
+        height: auto;
+        display: block;
+        margin: 0 auto 0px auto;
+        /* Subtle drop shadow to make it pop against the sky */
+        filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+        transition: transform 0.3s ease;
+      }
+
+      .game-logo:hover {
+        transform: scale(1.02);
+      }
+
+      p.subtitle {
+        color: #fff;
+        margin-bottom: 30px;
+        font-family: 'Kanit', sans-serif;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-align: center;
+        text-shadow: 0px 2px 4px rgba(0,0,0,0.2);
+        background-color: rgba(255,255,255,0.2); /* Lighter, glassier pill */
+        padding: 8px 20px;
+        border-radius: 30px;
+        backdrop-filter: blur(5px);
+      }
+
+      /* --- UNITY CONTAINER WRAPPER (RETRO DEVICE) --- */
+      #game-wrapper {
+        position: relative;
+        padding: 12px;
+        border-radius: 32px; /* Smoother rounding */
+        background: var(--bezel-color);
+        /* Bezel effects */
+        box-shadow: 
+          inset 0 0 0 2px rgba(255,255,255,0.1), /* Highlight */
+          0 25px 50px rgba(0, 0, 0, 0.3),       /* Drop Shadow */
+          0 0 0 10px rgba(0,0,0,0.05);          /* Outer ring */
+        transition: transform 0.3s ease;
+      }
+
+      /* --- UNITY CONTAINER --- */
+      #unity-container {
+        position: relative;
+        text-align: left;
+        background: #87CEEB; /* Fallback sky color */
+        border-radius: 20px; /* Match wrapper curvature */
+        overflow: hidden;
+        z-index: 1;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.2); /* Inner screen shadow */
+      }
+
+      #unity-canvas {
+        background: #87CEEB;
+        width: 100%;
+        height: 100%;
+        display: block;
+        outline: none;
+        touch-action: none; /* Prevent default touch behaviors for better game control */
+      }
+
+      /* Desktop Specifics: Phone Dimensions */
+      #unity-container.unity-desktop {
+        width: 405px; 
+        height: 720px;
+      }
+
+      /* Mobile Specifics: Fullscreen */
+      #unity-container.unity-mobile {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+      }
+
+      /* --- LOADING SCREEN --- */
+      #unity-loading-bar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--sky-top); /* Match background */
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+      }
+
+      #unity-logo {
+        width: 100px;
+        height: 100px;
+        background: url('TemplateData/unity-logo-dark.png') no-repeat center;
+        background-size: contain;
+        margin-bottom: 20px;
+        filter: brightness(0) invert(1); /* Make unity logo white */
+      }
+
+      #unity-progress-bar-empty {
+        width: 60%;
+        height: 8px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 4px;
+        overflow: hidden;
+        border: 2px solid rgba(255,255,255,0.5);
+      }
+
+      #unity-progress-bar-full {
+        width: 0%;
+        height: 100%;
+        background: var(--pumpii-pink); /* Character Pink */
+        box-shadow: 0 0 10px var(--pumpii-pink);
+        transition: width 0.2s ease-out;
+      }
+      
+      .loading-text {
+        margin-top: 15px;
+        font-size: 0.9rem;
+        color: white;
+        font-family: 'Kanit', sans-serif;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* --- ALERTS & FOOTER --- */
+      #unity-warning {
+        position: absolute;
+        left: 50%;
+        bottom: 50px;
+        transform: translate(-50%);
+        background: rgba(255, 0, 0, 0.9);
+        padding: 10px 20px;
+        display: none;
+        border-radius: 8px;
+        z-index: 20;
+        color: white;
+        font-weight: bold;
+        width: 80%;
+        text-align: center;
+        font-size: 0.8rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+      }
+
+      #unity-fullscreen-button {
+        position: absolute;
+        bottom: 15px;
+        right: 15px;
+        width: 40px;
+        height: 40px;
+        background: url('TemplateData/fullscreen-button.png') no-repeat center;
+        background-size: 60%;
+        background-color: rgba(0, 0, 0, 0.5);
+        border: 2px solid rgba(255,255,255,0.8);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+        z-index: 5;
+      }
+
+      #unity-fullscreen-button:hover {
+        transform: scale(1.1);
+        background-color: var(--pumpii-pink);
+      }
+
+      .webgl-footer {
+        margin-top: 25px;
+        font-size: 0.9rem;
+        color: rgba(255,255,255,0.8);
+        display: flex;
+        gap: 20px;
+        font-family: 'Kanit', sans-serif;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      }
+      
+      .webgl-footer a {
+        color: #fff;
+        text-decoration: none;
+        font-weight: 600;
+        border-bottom: 2px solid transparent;
+        transition: border-color 0.2s;
+      }
+      
+      .webgl-footer a:hover {
+        border-color: var(--coin-gold);
+      }
+
+      /* --- MOBILE OVERRIDES --- */
+      @media only screen and (max-width: 600px) {
+        body {
+          justify-content: flex-start;
+          background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 100%);
+          padding: 0;
+          overflow: hidden;
+          position: fixed;
+          width: 100%;
+          height: 100%;
+        }
+        /* Changed h1 to .game-logo to hide image on mobile */
+        .game-logo, p.subtitle, .webgl-footer {
+          display: none !important; 
+        }
+        #unity-fullscreen-button {
+          display: none !important;
+        }
+        #game-wrapper {
+          padding: 0;
+          box-shadow: none;
+          background: none;
+          width: 100vw;
+          height: 100vh;
+          border-radius: 0;
+          position: fixed;
+          top: 0;
+          left: 0;
+        }
+        #unity-container.unity-mobile {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw !important;
+          height: 100vh !important;
+          border-radius: 0;
+          touch-action: none; /* Prevent default touch behaviors */
+        }
+        #unity-canvas.unity-mobile {
+          width: 100vw !important;
+          height: 100vh !important;
+          touch-action: none; /* Prevent default touch behaviors */
+        }
+        #unity-warning {
+          bottom: 20px; /* Adjust for mobile */
+          font-size: 0.75rem;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" width=405 height=720 tabindex="-1"></canvas>
-      <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
-          <div id="unity-progress-bar-full"></div>
+    
+    <!-- Title Section (Visible on Desktop) -->
+    <!-- UPDATED: Using Image Logo instead of Text -->
+    <img src="karma-climber-logo.webp" alt="Karma Climber" class="game-logo">
+    
+    <p class="subtitle">Earn $KARMA and $STT.</p>
+
+    <!-- Game Container -->
+    <div id="game-wrapper">
+      <div id="unity-container" class="unity-desktop">
+        <canvas id="unity-canvas" width=405 height=720 tabindex="-1"></canvas>
+        
+        <div id="unity-loading-bar">
+          <div id="unity-logo"></div> 
+          <div id="unity-progress-bar-empty">
+            <div id="unity-progress-bar-full"></div>
+          </div>
+          <div class="loading-text">Loading...</div>
         </div>
-      </div>
-      <div id="unity-warning"> </div>
-      <div id="unity-footer">
-        <div id="unity-logo-title-footer"></div>
+        
+        <div id="unity-warning"> </div>
+        
         <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">Karma Climber</div>
       </div>
     </div>
+
+    <!-- Footer Section -->
+    <div class="webgl-footer">
+      <span>X2C Games © 2024</span>
+    </div>
+
     <script>
       var canvas = document.querySelector("#unity-canvas");
 
-      // Shows a temporary message banner/ribbon for a few seconds, or
-      // a permanent error message on top of the canvas if type=='error'.
-      // If type=='warning', a yellow highlight color is used.
-      // Modify or remove this function to customize the visually presented
-      // way that non-critical warnings and error messages are presented to the
-      // user.
+      // Custom Banner Logic
       function unityShowBanner(msg, type) {
         var warningBanner = document.querySelector("#unity-warning");
         function updateBannerVisibility() {
@@ -40,9 +344,9 @@
         var div = document.createElement('div');
         div.innerHTML = msg;
         warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        if (type == 'error') div.style = 'background: #ff4444; padding: 10px;';
         else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          if (type == 'warning') div.style = 'background: #ffbb33; color: black; padding: 10px;';
           setTimeout(function() {
             warningBanner.removeChild(div);
             updateBannerVisibility();
@@ -52,79 +356,106 @@
       }
 
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/Karma New.loader.js";
+      var loaderUrl = buildUrl + "/Karma Climber.loader.js";
       var config = {
         arguments: [],
-        dataUrl: buildUrl + "/Karma New.data",
-        frameworkUrl: buildUrl + "/Karma New.framework.js",
-        codeUrl: buildUrl + "/Karma New.wasm",
+        dataUrl: buildUrl + "/Karma Climber.data",
+        frameworkUrl: buildUrl + "/Karma Climber.framework.js",
+        codeUrl: buildUrl + "/Karma Climber.wasm",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "X2C",
         productName: "Karma Climber",
         productVersion: "1.0.7",
         showBanner: unityShowBanner,
-        // errorHandler: function(err, url, line) {
-        //    alert("error " + err + " occurred at line " + line);
-        //    // Return 'true' if you handled this error and don't want Unity
-        //    // to process it further, 'false' otherwise.
-        //    return true;
-        // },
       };
 
-      // By default, Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
-
-      // If you would like all file writes inside Unity Application.persistentDataPath
-      // directory to automatically persist so that the contents are remembered when
-      // the user revisits the site the next time, uncomment the following line:
-      // config.autoSyncPersistentDataPath = true;
-      // This autosyncing is currently not the default behavior to avoid regressing
-      // existing user projects that might rely on the earlier manual
-      // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
-      // expected to change.
-
+      // Detect Mobile
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
-
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-        document.querySelector("#unity-container").className = "unity-mobile";
+        // Update existing viewport meta instead of creating duplicate
+        var existingViewport = document.querySelector('meta[name="viewport"]');
+        if (existingViewport) {
+          existingViewport.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes, viewport-fit=cover';
+        } else {
+          var meta = document.createElement('meta');
+          meta.name = 'viewport';
+          meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes, viewport-fit=cover';
+          document.getElementsByTagName('head')[0].appendChild(meta);
+        }
+        
+        // Prevent body scroll on mobile
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
+        document.body.style.height = '100%';
+        
+        // Prevent pull-to-refresh on mobile (only prevent on body/document, not canvas)
+        var preventPullToRefresh = function(e) {
+          // Only prevent if touch is not on the canvas
+          if (e.target !== canvas && !canvas.contains(e.target)) {
+            e.preventDefault();
+          }
+        };
+        document.addEventListener('touchmove', preventPullToRefresh, { passive: false });
+        
+        var container = document.querySelector("#unity-container");
+        container.className = "unity-mobile";
         canvas.className = "unity-mobile";
-
-        // To lower canvas resolution on mobile devices to gain some
-        // performance, uncomment the following line:
-        // config.devicePixelRatio = 1;
-
+        
+        // Ensure canvas can receive focus for touch events
+        canvas.setAttribute('tabindex', '0');
+        
+        // Use window dimensions for better mobile support (handles address bar)
+        function setMobileDimensions() {
+          var vh = window.innerHeight;
+          var vw = window.innerWidth;
+          canvas.style.width = vw + "px";
+          canvas.style.height = vh + "px";
+          container.style.width = vw + "px";
+          container.style.height = vh + "px";
+          document.querySelector("#game-wrapper").style.width = vw + "px";
+          document.querySelector("#game-wrapper").style.height = vh + "px";
+        }
+        
+        setMobileDimensions();
+        // Update on resize/orientation change
+        window.addEventListener('resize', setMobileDimensions);
+        window.addEventListener('orientationchange', function() {
+          setTimeout(setMobileDimensions, 100);
+        });
+        
+        // Mobile housekeeping: hide desktop stuff
+        // Updated to hide .game-logo instead of h1
+        document.querySelector(".game-logo").style.display = "none";
+        document.querySelector(".subtitle").style.display = "none";
+        document.querySelector(".webgl-footer").style.display = "none";
+        document.querySelector("#unity-fullscreen-button").style.display = "none";
+        document.querySelector("#game-wrapper").style.boxShadow = "none";
+        document.querySelector("#game-wrapper").style.borderRadius = "0";
+        document.querySelector("#game-wrapper").style.padding = "0";
+        document.querySelector("#game-wrapper").style.background = "none";
 
       } else {
-        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
         canvas.style.width = "405px";
         canvas.style.height = "720px";
       }
 
-      document.querySelector("#unity-loading-bar").style.display = "block";
+      // Show loader
+      document.querySelector("#unity-loading-bar").style.display = "flex";
 
       var script = document.createElement("script");
       script.src = loaderUrl;
       script.onload = () => {
         createUnityInstance(canvas, config, (progress) => {
           document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
-              }).then((unityInstance) => {
-                document.querySelector("#unity-loading-bar").style.display = "none";
-                document.querySelector("#unity-fullscreen-button").onclick = () => {
-                  document.makeFullscreen('unity-container');
-                };
-
-              }).catch((message) => {
-                alert(message);
-              });
-            };
+        }).then((unityInstance) => {
+          document.querySelector("#unity-loading-bar").style.display = "none";
+          document.querySelector("#unity-fullscreen-button").onclick = () => {
+            unityInstance.SetFullscreen(1);
+          };
+        }).catch((message) => {
+          alert(message);
+        });
+      };
 
       document.body.appendChild(script);
 
