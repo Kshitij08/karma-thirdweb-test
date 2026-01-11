@@ -245,6 +245,106 @@
         border-color: var(--coin-gold);
       }
 
+      /* --- MOBILE: Hide all custom styling, show vanilla Unity only --- */
+      @media only screen and (max-width: 600px) {
+        body {
+          background: #000 !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          display: block !important;
+          flex-direction: unset !important;
+          align-items: unset !important;
+          justify-content: unset !important;
+          min-height: unset !important;
+          height: 100vh !important;
+          overflow: hidden !important;
+        }
+        .game-logo,
+        p.subtitle,
+        .webgl-footer {
+          display: none !important;
+        }
+        #game-wrapper {
+          padding: 0 !important;
+          box-shadow: none !important;
+          background: transparent !important;
+          border-radius: 0 !important;
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          margin: 0 !important;
+        }
+        #unity-container {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          background: #000 !important;
+          margin: 0 !important;
+        }
+        #unity-canvas {
+          width: 100% !important;
+          height: 100% !important;
+        }
+        #unity-loading-bar {
+          background-color: #000 !important;
+        }
+      }
+      
+      /* Additional mobile targeting via class */
+      body.is-mobile {
+        background: #000 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
+        flex-direction: unset !important;
+        align-items: unset !important;
+        justify-content: unset !important;
+        min-height: unset !important;
+        height: 100vh !important;
+        overflow: hidden !important;
+      }
+      body.is-mobile .game-logo,
+      body.is-mobile p.subtitle,
+      body.is-mobile .webgl-footer {
+        display: none !important;
+      }
+      body.is-mobile #game-wrapper {
+        padding: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+      }
+      body.is-mobile #unity-container {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: #000 !important;
+        margin: 0 !important;
+      }
+      body.is-mobile #unity-canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+      body.is-mobile #unity-loading-bar {
+        background-color: #000 !important;
+      }
+
     </style>
   </head>
   <body>
@@ -318,11 +418,21 @@
 
       // Detect Mobile - Use default Unity mobile handling
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        // Add mobile class to body for CSS targeting
+        document.body.classList.add('is-mobile');
+        
+        // Update existing viewport meta if it exists, otherwise create new one
+        var existingViewport = document.querySelector('meta[name="viewport"]');
+        if (existingViewport) {
+          existingViewport.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        } else {
+          var meta = document.createElement('meta');
+          meta.name = 'viewport';
+          meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+          document.getElementsByTagName('head')[0].appendChild(meta);
+        }
+        
         // Mobile device style: fill the whole browser client area with the game canvas
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
         document.querySelector("#unity-container").className = "unity-mobile";
         canvas.className = "unity-mobile";
       } else {
